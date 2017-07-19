@@ -72,9 +72,9 @@ namespace BigRunner.ConsoleApp
                             }
                             else
                             {
-                                if (!Equals(cmdArgs["enablelogfile"], null))
+                                if (!Equals(cmdArgs["logfilepath"], null))
                                 {
-                                    enabledLogToFile = ProcessLogFileStatus(cmdArgs["enablelogfile"]);
+                                    enabledLogToFile = ProcessLogFileStatus(cmdArgs["logfilepath"]);
                                     if (enabledLogToFile)
                                     {
                                         logger = InitializeLogFile(cmdArgs["logfilepath"]);
@@ -404,6 +404,7 @@ namespace BigRunner.ConsoleApp
                 if (currItem != string.Empty)
 	            {
 	                retval = currItem + " " + objectType;
+	                break;
 	            }
 	            else
 	            {
@@ -477,17 +478,21 @@ namespace BigRunner.ConsoleApp
 	        return null;
 	    }
 
-	    private static bool ProcessLogFileStatus(string enabledLogToFile)
+	    private static bool ProcessLogFileStatus(string logFile)
 	    {
-	        var enabledLogToFileStr = enabledLogToFile != null ? enabledLogToFile.Trim().ToLower() : null;
+	        var enabledLogToFileStr = logFile != null ? logFile.Trim().ToLower() : null;
 
-	        /**********************************************
-                If the user enter "yes" or "no", we will
-                enable/disable Log To File
-            **********************************************/
-	        if (enabledLogToFileStr == "yes" || enabledLogToFileStr == "true")
+	        if (enabledLogToFileStr != string.Empty)
 	        {
-	            return true;
+                // Check if the directory exists
+                if (Directory.Exists(Path.GetDirectoryName(logFile)))
+	            {
+	                return true;
+	            }
+	            else
+	            {
+	                return false;
+	            }
 	        }
 	        else
 	        {
