@@ -1,10 +1,13 @@
-﻿namespace BigRunner.ConsoleApp
+﻿
+
+namespace BigRunner.ConsoleApp
 {
 	using System;
 	using System.Data;
 	using System.Data.SqlClient;
 	using System.Diagnostics;
 	using System.IO;
+	using System.Text.RegularExpressions;
 
     /// <summary>
 	/// This indicates that it is start point to run
@@ -132,6 +135,7 @@
 					Initialize the message to show to the user
 				**********************************************/
                 var message = String.Empty;
+                string prevObject = string.Empty;
 
                 /**********************************************
 					Specify the first times to run the script
@@ -162,6 +166,17 @@
 						**********************************************/
                         scriptDataline = scriptDataline != null ? scriptDataline.Trim() : scriptDataline;
 
+                        var currentDbObject = GetCurrentDatabaseObject(scriptDataline);
+
+                        if (currentDbObject != string.Empty)
+                        {
+                            if (prevObject != currentDbObject)
+                            {
+                                Console.WriteLine($"Working with {currentDbObject}...");
+                                prevObject = currentDbObject;
+                            }
+                        }
+
                         /**********************************************
 							Run the script right away when seeing GO
 							batch. This batch is always sensitive case
@@ -179,7 +194,8 @@
 								run
 							**********************************************/
                             sqlCommand = new SqlCommand(scriptDataline, sqlConnection);
-                            var numberOfAffectedRows = sqlCommand.ExecuteNonQuery();
+                            var numberOfAffectedRows = 0;
+                            //var numberOfAffectedRows = sqlCommand.ExecuteNonQuery();
 
                             /**********************************************
 								Reset the line data to blank value
@@ -301,6 +317,103 @@
                 }
             }
         }
+
+	    private static string GetCurrentDatabaseObject(string scriptDataline)
+	    {
+	        string retval;
+	        var lineState = string.Empty;
+
+	        if (scriptDataline.Contains(" GO"))
+	        {
+	            lineState = "GO";
+	        }
+            else if (scriptDataline.Contains("USE"))
+	        {
+	            lineState = "USE";
+	        }
+            else if (scriptDataline.Contains("CREATE TABLE"))
+	        {
+	            lineState = "CREATETABLE";
+	        }
+	        else if (scriptDataline.Contains("TRUNCATE"))
+	        {
+	            lineState = "TRUNCATE";
+	        }
+            else if (scriptDataline.Contains("INSERT"))
+	        {
+	            lineState = "INSERT";
+	        }
+	        else if (scriptDataline.Contains("UPDATE"))
+	        {
+	            lineState = "UPDATE";
+	        }
+	        else if (scriptDataline.Contains("DELETE"))
+	        {
+	            lineState = "DELETE";
+	        }
+
+            switch (lineState)
+	        {
+                case "USE":
+                    retval = ProcessSqlLine(scriptDataline, "database");
+                    break;
+                case "CREATETABLE":
+                    retval = ProcessSqlLine(scriptDataline, "table");
+                    break;
+                case "INSERT":
+                    retval = ProcessSqlLine(scriptDataline, "table");
+                    break;
+	            case "UPDATE":
+	                retval = ProcessSqlLine(scriptDataline, "table");
+	                break;
+	            case "DELETE":
+	                retval = ProcessSqlLine(scriptDataline, "table");
+	                break;
+	            case "TRUNCATE":
+	                retval = ProcessSqlLine(scriptDataline, "table");
+	                break;
+                default:
+                    retval = string.Empty;
+                    break;
+            }
+
+            return retval;
+	    }
+
+	    private static string ProcessSqlLine(string sqlLine, string objectType)
+	    {
+	        var rx = new Regex("\\[{0,1}(?<schema>\\b\\w*?\\b){0,1}\\]");
+            var matches = rx.Matches(sqlLine);
+	        string retval = string.Empty;
+
+	        foreach (var match in matches)
+	        {
+	            var currItem = match.ToString().Replace("dbo", "");
+	            currItem = currItem.Replace("[", "");
+	            currItem = currItem.Replace("]", "");
+	            currItem = currItem.Replace(".", "");
+	            currItem = currItem.Replace("(", "");
+	            currItem = currItem.Replace(")", "");
+                currItem = currItem.Replace("INSERT", "");
+	            currItem = currItem.Replace(" GO", "");
+	            currItem = currItem.Replace("CREATE TABLE", "");
+	            currItem = currItem.Replace("USE ", "");
+	            currItem = currItem.Replace("int", "");
+	            currItem = currItem.Replace("varchar", "");
+
+                if (currItem != string.Empty)
+	            {
+	                retval = currItem + " " + objectType;
+	            }
+	            else
+	            {
+	                retval = string.Empty;
+	            }
+
+	        }
+
+	        return retval;
+	    }
 
 	    private static SqlConnection ProcessConnectionString(string connectionString)
 	    {
@@ -516,7 +629,7 @@
                     }
                     else
                     {
-                        Console.WriteLine($"[Error] Your database is in {sqlConnection.State.ToString()} status");
+                        Console.WriteLine($"[Error] Your database is in {sqlConnection.State} status");
                     }
                 }
                 catch (Exception e)

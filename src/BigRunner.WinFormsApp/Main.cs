@@ -1,14 +1,11 @@
 ﻿namespace BigRunner.WinFormsApp
 {
 	using System;
-	using System.Collections.Generic;
 	using System.ComponentModel;
 	using System.Data;
 	using System.Data.SqlClient;
 	using System.Diagnostics;
-	using System.Drawing;
 	using System.IO;
-	using System.Linq;
 	using System.Text;
 	using System.Windows.Forms;
 
@@ -216,8 +213,8 @@
 						enabledLogToFile = enabledLogToFile && (logger != null);
 						if (enabledLogToFile)
 						{
-							logger.WriteLine(String.Format("*************** [{0}]****************", DateTime.Now));
-							logger.WriteLine(String.Format("Running {0}...", fileNamePath));
+							logger.WriteLine($"*************** [{DateTime.Now}]****************");
+							logger.WriteLine($"Running {fileNamePath}...");
 						}
 					}
 
@@ -293,7 +290,7 @@
 									Should combine the current line and the new
 									line which was read from file to run
 								**********************************************/
-								scriptDataline = String.Format("{0} {1}", scriptDataline, nextScriptDataLine);
+								scriptDataline = $"{scriptDataline} {nextScriptDataLine}";
 
 								/**********************************************
 									Should trim the line data to avoid extra
