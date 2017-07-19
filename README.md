@@ -19,3 +19,15 @@ You have to meet the following requirements before running the tool:
 
 ### MORE INFORMATION ###
 In order to know further details, please go the web address (https://bigsqlrunner.codeplex.com/) or contact me via blog (http://dotnetmagazines.wordpress.com/)
+
+### UPDATES ###
+
+This fork now contains the old interactive mode, and a true command-line mode. To call up the old behavior please use -interactive.
+
+## Parameters
+
+**connectionstring** - The connection string to the server we want to execute the script on.
+
+**sqlfile** - The T-SQL script to be run.
+
+**logfilepath** - The path to the logfile that you want to store information on. Exclude this parameter if you don't want a log file.
